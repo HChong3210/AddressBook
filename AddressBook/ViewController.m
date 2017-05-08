@@ -9,6 +9,7 @@
 #import "ViewController.h"
 #import <AddressBook/AddressBook.h>
 #import <Contacts/Contacts.h>
+#import "AddressBookListVCViewController.h"
 @interface ViewController ()
 
 @end
@@ -17,8 +18,21 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    // Do any additional setup after loading the view, typically from a nib.
-    [self createAddressBook];
+    self.view.backgroundColor = [UIColor lightGrayColor];
+    
+    
+    UIButton *button = [UIButton buttonWithType:UIButtonTypeCustom];
+    button.frame = CGRectMake(100, 200, 100, 50);
+    [button addTarget:self action:@selector(buttonAction:) forControlEvents:UIControlEventTouchUpInside];
+    [button setTitle:@"确定" forState:UIControlStateNormal];
+    button.backgroundColor = [UIColor darkGrayColor];
+    button.titleLabel.font = [UIFont systemFontOfSize:12];
+    [self.view addSubview:button];
+}
+
+- (void)buttonAction:(id)action {
+    AddressBookListVCViewController *vc = [[AddressBookListVCViewController alloc] init];
+    [self.navigationController pushViewController:vc animated:YES];
 }
 
 - (void)didReceiveMemoryWarning {
@@ -134,21 +148,17 @@
     CFRelease(addressBook);
 }
 
-- (void)removeItemWithName:(NSString *)name phone:(NSString *)phone {
+//iOS8
+- (void)removeItemWithName:(NSString *)name{
     ABAddressBookRef addressbook = ABAddressBookCreate();
     CFStringRef nameRef = (__bridge CFStringRef) name;
     CFArrayRef  allSearchRecords = ABAddressBookCopyPeopleWithName(addressbook, nameRef);
-    [self removeContactWithRecordsList:allSearchRecords];
-}
-
-- (void)removeContactWithRecordsList:(CFArrayRef) selectedRecords_ {
-    ABAddressBookRef addressbook = ABAddressBookCreate();
-    if (selectedRecords_ != NULL)
+    if (allSearchRecords != NULL)
     {
-        CFIndex count = CFArrayGetCount(selectedRecords_);
+        CFIndex count = CFArrayGetCount(allSearchRecords);
         for (int i = 0; i < count; ++i)
         {
-            ABRecordRef contact = CFArrayGetValueAtIndex(selectedRecords_, i);
+            ABRecordRef contact = CFArrayGetValueAtIndex(allSearchRecords, i);
             ABAddressBookRemoveRecord(addressbook, contact, nil);
         }
     }
@@ -156,6 +166,90 @@
     CFRelease(addressbook);
 }
 
+//iOS9
+- (void)addContactWithName:(NSString *)name {
+    
+    CNContactStore *store = [[CNContactStore alloc] init];
+    [store requestAccessForEntityType:CNEntityTypeContacts completionHandler:^(BOOL granted, NSError * _Nullable error) {
+        if (!granted) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                //失败原因
+            });
+            return;
+        }
+        
+        CNMutableContact *contact = [[CNMutableContact alloc] init];
+        contact.familyName = @"Doe";
+        contact.givenName = @"John";
+        
+        CNLabeledValue *homePhone = [CNLabeledValue labeledValueWithLabel:CNLabelHome value:[CNPhoneNumber phoneNumberWithStringValue:@"312-555-1212"]];
+        contact.phoneNumbers = @[homePhone];
+        
+        CNSaveRequest *request = [[CNSaveRequest alloc] init];
+        [request addContact:contact toContainerWithIdentifier:nil];
+        
+        // save it
+        NSError *saveError;
+        if (![store executeSaveRequest:request error:&saveError]) {
+            NSLog(@"error = %@", saveError);
+        }
+    }];
+}
 
+- (void)removeContactWithName:(NSString *)name {
+    CNContactStore *store = [[CNContactStore alloc] init];
+    NSPredicate *predicate = [CNContact predicateForContactsMatchingName:name];
+    NSArray *contacts = [store unifiedContactsMatchingPredicate:predicate keysToFetch:@[CNContactGivenNameKey, CNContactFamilyNameKey] error:nil];
+    
+    for (CNMutableContact *contact in contacts) {
+        CNSaveRequest *request = [[CNSaveRequest alloc] init];
+        [request deleteContact:contact];
+        // save it
+        NSError *saveError;
+        if (![store executeSaveRequest:request error:&saveError]) {
+            NSLog(@"error = %@", saveError);
+        }
+    }
+}
+
+- (void)addItemWithName:(NSString *)name phone:(NSString *)phone {
+    // 创建对象
+    CNMutableContact * contact = [[CNMutableContact alloc]init];
+    contact.givenName = name?:@"defaultname";
+    CNLabeledValue *phoneNumber = [CNLabeledValue labeledValueWithLabel:CNLabelPhoneNumberMobile value:[CNPhoneNumber phoneNumberWithStringValue:phone?:@"10086"]];
+    contact.phoneNumbers = @[phoneNumber];
+    
+    // 把对象加到请求中
+    CNSaveRequest * saveRequest = [[CNSaveRequest alloc]init];
+    [saveRequest addContact:contact toContainerWithIdentifier:nil];
+    
+    // 执行请求
+    CNContactStore * store = [[CNContactStore alloc]init];
+    [store executeSaveRequest:saveRequest error:nil];
+}
+
+- (void)removeItemWithName:(NSString *)name phone:(NSString *)phone {
+    // 创建对象
+    CNMutableContact * contact = [[CNMutableContact alloc]init];
+    contact.givenName = name?:@"defaultname";
+    CNLabeledValue *phoneNumber = [CNLabeledValue labeledValueWithLabel:CNLabelPhoneNumberMobile value:[CNPhoneNumber phoneNumberWithStringValue:phone?:@"10086"]];
+    contact.phoneNumbers = @[phoneNumber];
+    
+    // 把对象加到请求中
+    CNSaveRequest * saveRequest = [[CNSaveRequest alloc]init];
+    [saveRequest addContact:contact toContainerWithIdentifier:nil];
+    
+    // 执行请求
+    CNContactStore * store = [[CNContactStore alloc]init];
+    [store executeSaveRequest:saveRequest error:nil];
+}
+
+- (void)getContact {
+    
+}
+
+- (void)getItem {
+    
+}
 
 @end

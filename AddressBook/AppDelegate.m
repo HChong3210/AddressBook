@@ -7,6 +7,7 @@
 //
 
 #import "AppDelegate.h"
+#import <Contacts/Contacts.h>
 
 @interface AppDelegate ()
 
@@ -16,8 +17,41 @@
 
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
-    // Override point for customization after application launch.
+    
+    [self addressBookEmpowerCheck];
     return YES;
+}
+
+- (void)addressBookEmpowerCheck {
+    CNAuthorizationStatus status = [CNContactStore authorizationStatusForEntityType:CNEntityTypeContacts];
+    switch (status) {
+        case CNAuthorizationStatusNotDetermined: {
+            [[[CNContactStore alloc]init] requestAccessForEntityType:CNEntityTypeContacts completionHandler:^(BOOL granted, NSError * _Nullable error) {
+                NSLog(@"还没问");
+                if (granted) {
+                    NSLog(@"点击了同意");
+                } else {
+                    NSLog(@"点击了拒绝");
+                }
+            }];
+        }
+            break;
+        case CNAuthorizationStatusRestricted: {
+            NSLog(@"未授权, 例如家长控制");
+        }
+            break;
+        case CNAuthorizationStatusDenied: {
+            NSLog(@"未授权, 用户拒绝所致");
+        }
+            break;
+        case CNAuthorizationStatusAuthorized: {
+            NSLog(@"已经授权");
+        }
+            break;
+        default: {
+        }
+            break;
+    }
 }
 
 

@@ -10,5 +10,6 @@
 
 @interface AddressBookDataManager : NSObject
 
++ (void)checkAddressBookAuthorization:(void (^)(bool isAuthorized))block;
 + (NSDictionary *)getTitleAndData;
 @end

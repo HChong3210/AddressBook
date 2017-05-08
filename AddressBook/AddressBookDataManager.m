@@ -162,18 +162,28 @@
         }
     }
     
+    //判断是否需要加#
+    if (titleArray.count != data.count) {
+        [titleArray addObject:@"#"];
+    }
     
-//        NSMutableArray *sortedArray = [NSMutableArray array];
-//        //对每个section中的数组按照name属性排序
-//        for (NSInteger index = 0; index < data.count; index++) {
-//            NSMutableArray *personArrayForSection = data[index];
-//            NSSortDescriptor *nameDesc    = [NSSortDescriptor sortDescriptorWithKey:@"name"
-//                                                                          ascending:YES];
-//            NSArray *descriptorArray = @[nameDesc];//此处可以按照多个排序规则, 顺序比较, 比较的顺序就是数组里面元素的顺序
-//            
-//            NSArray *temp = [personArrayForSection sortedArrayUsingDescriptors: descriptorArray];
-//            sortedArray[index] = temp;
-//        }
+    NSDictionary *dic = @{@"source": [AddressBookDataManager sortedArray:data],
+                          @"title": titleArray};
+    return dic;
+}
+
++ (NSArray *)sortedArray:(NSArray *)data {
+    //        NSMutableArray *sortedArray = [NSMutableArray array];
+    //        //对每个section中的数组按照name属性排序
+    //        for (NSInteger index = 0; index < data.count; index++) {
+    //            NSMutableArray *personArrayForSection = data[index];
+    //            NSSortDescriptor *nameDesc    = [NSSortDescriptor sortDescriptorWithKey:@"name"
+    //                                                                          ascending:YES];
+    //            NSArray *descriptorArray = @[nameDesc];//此处可以按照多个排序规则, 顺序比较, 比较的顺序就是数组里面元素的顺序
+    //
+    //            NSArray *temp = [personArrayForSection sortedArrayUsingDescriptors: descriptorArray];
+    //            sortedArray[index] = temp;
+    //        }
     
     
     NSMutableArray *sortedArray = [NSMutableArray array];
@@ -185,28 +195,18 @@
         sortedArray[index] = temp;
     }
     
-
     
-//    UILocalizedIndexedCollation *collation = [UILocalizedIndexedCollation currentCollation];
-//    NSMutableArray *sortedArray = [NSMutableArray array];
-//    //对每个section中的数组按照name属性排序
-//    for (NSInteger index = 0; index < data.count; index++) {
-//        NSMutableArray *personArrayForSection = data[index];
-//        NSArray *sortedPersonArrayForSection = [collation sortedArrayFromArray:personArrayForSection collationStringSelector:@selector(name)];
-//        sortedArray[index] = sortedPersonArrayForSection;
-//    }
     
-    //判断是否需要加#
-    if (titleArray.count != data.count) {
-        [titleArray addObject:@"#"];
-    }
-    
-    NSDictionary *dic = @{@"source": sortedArray,
-                          @"title": titleArray};
-    return dic;
+    //    UILocalizedIndexedCollation *collation = [UILocalizedIndexedCollation currentCollation];
+    //    NSMutableArray *sortedArray = [NSMutableArray array];
+    //    //对每个section中的数组按照name属性排序
+    //    for (NSInteger index = 0; index < data.count; index++) {
+    //        NSMutableArray *personArrayForSection = data[index];
+    //        NSArray *sortedPersonArrayForSection = [collation sortedArrayFromArray:personArrayForSection collationStringSelector:@selector(name)];
+    //        sortedArray[index] = sortedPersonArrayForSection;
+    //    }
+    return sortedArray;
 }
-
-
 
 
 #pragma mark - Tool

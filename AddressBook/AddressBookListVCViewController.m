@@ -45,11 +45,15 @@
 //        });
 //    });
     
-    NSDictionary *dic = [AddressBookDataManager getTitleAndData];
-    
-        self.dataArray = dic[@"source"];
-        self.titleArray = dic[@"title"];
-        [self.tableView reloadData];
+    [AddressBookDataManager checkAddressBookAuthorization:^(bool isAuthorized) {
+        if (isAuthorized) {
+            NSDictionary *dic = [AddressBookDataManager getTitleAndData];
+            
+            self.dataArray = dic[@"source"];
+            self.titleArray = dic[@"title"];
+            [self.tableView reloadData];
+        }
+    }];
 }
 
 - (void)tableViewConfig {
@@ -97,6 +101,10 @@
         return @"";
     }
     return self.titleArray[section];
+}
+
+- (NSArray *)sectionIndexTitlesForTableView:(UITableView *)tableView {
+    return self.titleArray;
 }
 
 #pragma mark - Getter, Setter

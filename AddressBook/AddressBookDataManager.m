@@ -104,6 +104,7 @@
     }
 }
 
+/*
 + (NSDictionary *)dealDataWithArray:(NSArray *)array {
     if (array.count == 0) {
         return nil;
@@ -168,6 +169,41 @@
     }
     
     NSDictionary *dic = @{@"source": [AddressBookDataManager sortedArray:data],
+                          @"title": titleArray};
+    return dic;
+}
+*/
+
++ (NSDictionary *)dealDataWithArray:(NSArray *)array {
+    
+    // 1.初始化一个索引，根据不同国家语言，会初始化出不同的索引，中文的是“A~Z,#”
+    UILocalizedIndexedCollation *collation = [UILocalizedIndexedCollation currentCollation];
+    // 2.获取索引的数量，并初始化对应数量的空数组，用于存放筛选数据
+    NSInteger sectionTitlesCount = [[collation sectionTitles] count];
+    NSMutableArray *sectionArrays = [NSMutableArray arrayWithCapacity:sectionTitlesCount];
+    for (int i = 0; i < sectionTitlesCount; i++) {
+        NSMutableArray *sectionArray = [NSMutableArray arrayWithCapacity:1];
+        [sectionArrays addObject:sectionArray];
+    }
+    // 3.排序的方法
+    SEL sorter = ABPersonGetSortOrdering() == kABPersonSortByFirstName ? NSSelectorFromString(@"name") : NSSelectorFromString(@"name");
+    // 4.分组
+    for (AddressBookContact *contact in array) {
+        //获取name属性的值所在的位置，比如"小白鼠"，首字母是X，在A~Z中排第23（第一位是0），sectionNumber就为23
+        NSInteger sectionNumber = [collation sectionForObject:contact collationStringSelector:sorter];
+        //把name为“小白鼠”的contact加入newSectionsArray中的第23个数组中去
+        NSMutableArray *sectionNames = sectionArrays[sectionNumber];
+        [sectionNames addObject:contact];
+    }
+    //5.排序
+    for (NSInteger i = 0; i < sectionTitlesCount; i++) {
+        NSMutableArray *personArrayForSection = sectionArrays[i];
+        NSArray *sortedPersonArrayForSection = [collation sortedArrayFromArray:personArrayForSection collationStringSelector:@selector(name)];
+        sectionArrays[i] = sortedPersonArrayForSection;
+    }
+    
+    NSArray *titleArray = [[[UILocalizedIndexedCollation currentCollation] sectionTitles] copy];
+    NSDictionary *dic = @{@"source": sectionArrays,
                           @"title": titleArray};
     return dic;
 }

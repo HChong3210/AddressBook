@@ -36,24 +36,18 @@
 
 #pragma mark - Private
 - (void)getData {
-//    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-//        NSDictionary *dic = [AddressBookDataManager getTitleAndData];
-//        dispatch_async(dispatch_get_main_queue(), ^{
-//            self.dataArray = dic[@"source"];
-//            self.titleArray = dic[@"title"];
-//            [self.tableView reloadData];
-//        });
-//    });
-    
-    [AddressBookDataManager checkAddressBookAuthorization:^(bool isAuthorized) {
-        if (isAuthorized) {
-            NSDictionary *dic = [AddressBookDataManager getTitleAndData];
-            
-            self.dataArray = dic[@"source"];
-            self.titleArray = dic[@"title"];
-            [self.tableView reloadData];
-        }
-    }];
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        [AddressBookDataManager checkAddressBookAuthorization:^(bool isAuthorized) {
+            if (isAuthorized) {
+                NSDictionary *dic = [AddressBookDataManager getTitleAndData];
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    self.dataArray = dic[@"source"];
+                    self.titleArray = dic[@"title"];
+                    [self.tableView reloadData];
+                });
+            }
+        }];
+    });
 }
 
 - (void)tableViewConfig {
@@ -93,24 +87,45 @@
 }
 
 - (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section{
+    if ([self.dataArray[section] count] == 0 || self.dataArray.count == 0) {
+        return 0.01;
+    }
     return 22;
 }
 
+//- (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section {
+//    if (self.titleArray.count == 0) {
+//        return @"";
+//    }
+//    return self.titleArray[section];
+//}
+
+//- (NSArray *)sectionIndexTitlesForTableView:(UITableView *)tableView {
+//    return self.titleArray;
+//}
+
+// 按照索引个数配置tableview区数
 - (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section {
-    if (self.titleArray.count == 0) {
+    if ([self.dataArray[section] count] == 0 || self.dataArray.count == 0) {
         return @"";
     }
-    return self.titleArray[section];
+    return [[UILocalizedIndexedCollation currentCollation] sectionTitles][section];
 }
 
+// 配置索引内容，就是通讯录中右侧的那一列“A~Z、#”
 - (NSArray *)sectionIndexTitlesForTableView:(UITableView *)tableView {
-    return self.titleArray;
+    return [[UILocalizedIndexedCollation currentCollation] sectionIndexTitles];
+}
+
+// 索引点击响应
+- (NSInteger)tableView:(UITableView *)tableView sectionForSectionIndexTitle:(NSString *)title atIndex:(NSInteger)index {
+    return [[UILocalizedIndexedCollation currentCollation] sectionForSectionIndexTitleAtIndex:index];
 }
 
 #pragma mark - Getter, Setter
 - (UITableView *)tableView {
     if (!_tableView) {
-        _tableView = [[UITableView alloc] initWithFrame:CGRectMake(0, 0, [UIScreen mainScreen].bounds.size.width, [UIScreen mainScreen].bounds.size.height) style:UITableViewStyleGrouped];
+        _tableView = [[UITableView alloc] initWithFrame:CGRectMake(0, 0, [UIScreen mainScreen].bounds.size.width, [UIScreen mainScreen].bounds.size.height) style:UITableViewStylePlain];
         _tableView.backgroundColor = [UIColor whiteColor];
         _tableView.dataSource = self;
         _tableView.delegate = self;

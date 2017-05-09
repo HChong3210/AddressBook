@@ -9,15 +9,30 @@
 #import "AddressBookListVCViewController.h"
 #import "AddressBookDataManager.h"
 #import "AddressBookContact.h"
+#import <AddressBook/AddressBook.h>
+#import <Contacts/Contacts.h>
 
 @interface AddressBookListVCViewController ()<UITableViewDelegate, UITableViewDataSource>
 
 @property (nonatomic, strong) NSArray *dataArray;
 @property (nonatomic, strong) NSArray *titleArray;
 @property (nonatomic, strong) UITableView *tableView;
+@property (nonatomic, assign) ABAddressBookRef addresBook;
 @end
 
 @implementation AddressBookListVCViewController
+
+- (instancetype)init {
+    self = [super init];
+    if (self) {
+        _addresBook = ABAddressBookCreateWithOptions(NULL, NULL);
+        ABAddressBookRegisterExternalChangeCallback(_addresBook, addressBookChanged, nil);
+        
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(addressBookDidChange:) name:CNContactStoreDidChangeNotification object:nil];
+
+    }
+    return self;
+}
 
 - (void)viewDidLoad {
     [super viewDidLoad];
@@ -30,8 +45,21 @@
     [super didReceiveMemoryWarning];
 }
 
+- (void)addressBookDidChange:(NSNotification*)notification{
+    NSLog(@"chaojibainbianbian....");
+}
+
+//监听通讯录变化
+void addressBookChanged(ABAddressBookRef addressBook, CFDictionaryRef info, void *context) {
+    NSLog(@"通讯录变化啦....");
+    //    VC1 *myVC = (__bridge VC1 *)context;
+    //    [myVC getPersonOutOfAddressBook];
+}
+
 - (void)dealloc {
     NSLog(@"%@-------------------dealloc", self);
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:CNContactStoreDidChangeNotification object:nil];
+    ABAddressBookUnregisterExternalChangeCallback(_addresBook, addressBookChanged, nil);
 }
 
 #pragma mark - Private
